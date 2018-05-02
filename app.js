@@ -20,8 +20,9 @@ server.listen(process.env.port || process.env.PORT || 3978, function () {
     openIdMetadata: process.env.BotOpenIdMetadata 
 });*/
 
-var useEmulator = (process.env.Environment == 'prod');
-var connector = useEmulator ? new builder.ChatConnector() : new botbuilder_azure.BotServiceConnector({
+var isProd = (process.env.Environment == 'prod');
+console.log(isProd);
+var connector = isProd ? new builder.ChatConnector() : new botbuilder_azure.BotServiceConnector({
     appId: process.env['MicrosoftAppId'],
     appPassword: process.env['MicrosoftAppPassword'],
     stateEndpoint: process.env['BotStateEndpoint'],
