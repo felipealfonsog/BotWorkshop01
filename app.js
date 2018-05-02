@@ -5,6 +5,8 @@ var restify = require('restify');
 var builder = require('botbuilder');
 var botbuilder_azure = require("botbuilder-azure");
 var dotenv = require('dotenv').config();
+const parseString = require('xml2js').parseString;
+const request = require('request')
 
 // Setup Restify Server
 var server = restify.createServer();
@@ -43,6 +45,61 @@ var tableStorage = new botbuilder_azure.AzureBotStorage({ gzipData: false }, azu
 var bot = new builder.UniversalBot(connector, function (session, args) {
     session.send('You reached the default message handler. You said \'%s\'.', session.message.text);
 });
+
+// Documentation for text translation API here: http://docs.microsofttranslator.com/text-translate.html
+bot.use({
+    receive: function (event, next) {
+        let idioma = ''
+        let frase = event.text
+        frase = frase.toString()
+
+        idioma = {
+            url: 'http://api.microsofttranslator.com/v2/http.svc/Detect?text=' + frase,
+            headers: {
+                'Ocp-Apim-Subscription-Key': process.env.TRANSLATION_KEY
+            }
+        }
+
+        let FROMLOCALE = '';
+        let TOLOCALE = 'en';
+
+        function callback(error, response, body) {
+            if (!error && response.statusCode == 200) {
+                let info = JSON.stringify(body)
+                info = info.replace('"<', "<")
+                info = info.replace('>"', ">")
+                info = info.replace('"h', "h")
+                info = info.replace('">', ">")
+                info = info.replace(`<string xmlns=\http://schemas.microsoft.com/2003/10/Serialization/\>`, '')
+                info = info.replace(`</string>`, '')
+                FROMLOCALE = info
+            }
+        }
+
+        request(idioma, callback)
+
+            let options = {
+                method: 'GET',
+                url: 'http://api.microsofttranslator.com/v2/http.svc/translate?text=' + frase + '&from=' + FROMLOCALE + '&to=' + TOLOCALE,
+                headers: {
+                    'Ocp-Apim-Subscription-Key': process.env.TRANSLATION_KEY
+                }
+            }
+            request(options, function (error, response, body) {
+                if (error) {
+                    return console.log('Error:', error)
+                } else if (response.statusCode !== 200) {
+                    return console.log('Invalid Status Code Returned:', response.statusCode)
+                } else {
+                    parseString(body, function (err, result) {
+                        event.text = result.string._
+                        next()
+                    })
+
+                }
+        })
+    }
+})
 
 bot.set('storage', tableStorage);
 
