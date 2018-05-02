@@ -6,14 +6,16 @@
   "dependencies": {
     "botbuilder": "^3.13.1",
     "botbuilder-azure": "^3.0.4",
-    "restify": "^5.0.0"
+    "nodemon": "^1.17.3",
+    "restify": "^5.0.0",
+    "dotenv-extended": "^1.0.4"
   },
   "devDependencies": {
     "request": "^2.81.0",
     "zip-folder": "^1.0.0"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "nodemon app.js"
   },
   "author": "",
   "license": "ISC"
