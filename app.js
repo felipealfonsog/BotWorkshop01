@@ -143,3 +143,37 @@ bot.dialog('CancelDialog',
     matches: 'Cancel'
 })
 
+bot.dialog('ProductDialog',
+    (session) => {
+        session.send('You reached the Product intent. You said \'%s\'.', session.message.text)
+        // =======================================================
+        let productoArray = {
+            url: 'https://botworkshop01-fun.azurewebsites.net/api/HttpTriggerJS1?product=computer'
+        }
+ 
+        function callback(error, response, body) {
+            if (!error && response.statusCode == 200) {
+                let arr = JSON.parse(body);
+                console.log(arr)
+                let msg = new builder.Message(session)
+                msg.attachmentLayout(builder.AttachmentLayout.carousel)                
+ 
+                let i = 0
+                for (i = 0; i <= arr.length - 1; i++) {
+                    let hc = new builder.HeroCard(session)
+                        .title(arr[i].name)
+                        .images([builder.CardImage.create(session, arr[i].image)])
+                        .buttons([
+                            builder.CardAction.imBack(session, "buy")
+                        ])
+                    msg.addAttachment(hc)
+                }
+                session.send(msg).endDialog()
+            }
+        }
+        request(productoArray, callback)
+        // =======================================================
+    }
+).triggerAction({
+    matches: 'Product'
+})
